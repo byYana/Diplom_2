@@ -45,4 +45,15 @@ public class NewUser {
         this.name = name;
     }
 
+    public void setRandomPassword() {
+        this.password =  RandomStringUtils.randomAlphabetic(10);
+    }
+
+    public void setRandomEmail() {
+        this.email = RandomStringUtils.randomAlphabetic(10) + "@yandex.ru";
+    }
+    public void setRandomName() {
+        this.name = RandomStringUtils.randomAlphabetic(8);
+    }
+
 }

@@ -1,5 +1,7 @@
 package ForUser;
 
+import org.apache.commons.lang3.RandomStringUtils;
+
 public class OldUser {
 
     private String email;
@@ -27,4 +29,11 @@ public class OldUser {
         this.password = password;
     }
 
+    public void setRandomPassword() {
+        this.password = RandomStringUtils.randomAlphabetic(10);
+    }
+
+    public void setRandomEmail() {
+        this.email = RandomStringUtils.randomAlphabetic(10) + "@yandex.ru";
+    }
 }
