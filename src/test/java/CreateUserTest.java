@@ -4,93 +4,60 @@ import io.restassured.response.Response;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.http.HttpStatus.*;
+import static org.apache.http.HttpStatus.SC_FORBIDDEN;
+import static org.apache.http.HttpStatus.SC_OK;
+import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertEquals;
 
-public class CreateUserTest {
+
+public class CreateUserTest {                   //~~Создание пользователя:~~
     NewUser user;
-    NewUser userDooble;
 
     @Before
     public void doBefore() {
         user = NewUser.getRandomUser();
-        userDooble = user;
     }
 
     @Test
-    public void checkCodeCreateUser() {              //проверяем код ответа
+    public void checkCreateUser() {             // ~~- создать уникального пользователя;~~
         Response response = UserAPI.createUser(user);
         String accessToken = response.jsonPath().getString("accessToken");
         assertEquals(SC_OK, response.statusCode());
-        assertEquals(SC_ACCEPTED, UserAPI.deleteUser(accessToken).statusCode());
+        response.then().assertThat().body("success", equalTo(true));
+        UserAPI.deleteUser(accessToken);
     }
 
     @Test
-    public void checkSuccessCreateUser() {           //проверяем тело ответа по значению "success"
-        Response response = UserAPI.createUser(user);
-        assertEquals(true, response.jsonPath().getJsonObject("success"));
-        String accessToken = response.jsonPath().getString("accessToken");
-        assertEquals(SC_ACCEPTED, UserAPI.deleteUser(accessToken).statusCode());
-    }
-
-    @Test
-    public void checkCodeDoobleCreateUser() {        //проверяем код ответа
+    public void checkDoobleCreateUser() {        // ~~- создать пользователя, который уже зарегистрирован;~~
         Response response = UserAPI.createUser(user);
         Response responseDooble = UserAPI.createUser(user);
         assertEquals(SC_FORBIDDEN, responseDooble.statusCode());
+        responseDooble.then().assertThat().body("success", equalTo(false));
         String accessToken = response.jsonPath().getString("accessToken");
-        assertEquals(SC_ACCEPTED, UserAPI.deleteUser(accessToken).statusCode());
+        UserAPI.deleteUser(accessToken);
     }
 
     @Test
-    public void checkSuccessDoobleCreateUser() {     //проверяем тело ответа по значению "success"
-        Response response = UserAPI.createUser(user);
-        Response responseDooble = UserAPI.createUser(userDooble);
-        assertEquals("false", responseDooble.jsonPath().getString("success"));
-        String accessToken = response.jsonPath().getString("accessToken");
-        assertEquals(SC_ACCEPTED, UserAPI.deleteUser(accessToken).statusCode());
-    }
-
-    @Test
-    public void checkCodeDefectEmail() {             //проверяем код ответа
+    public void checkDefectEmail() {             // ~~- создать пользователя и не заполнить поле почты.~~
         user.setEmail(null);
         Response response = UserAPI.createUser(user);
         assertEquals(SC_FORBIDDEN, response.statusCode());
+        response.then().assertThat().body("success", equalTo(false));
     }
 
     @Test
-    public void checkSuccessDefectEmail() {         //проверяем тело ответа по значению "success"
-        user.setEmail(null);
-        Response response = UserAPI.createUser(user);
-        assertEquals("false", response.jsonPath().getString("success"));
-    }
-
-    @Test
-    public void checkCodeDefectPassword() {         //проверяем код ответа
+    public void checkDefectPassword() {         // ~~- создать пользователя и не заполнить поле пароль.~~
         user.setPassword(null);
         Response response = UserAPI.createUser(user);
         assertEquals(SC_FORBIDDEN, response.statusCode());
+        response.then().assertThat().body("success", equalTo(false));
     }
 
     @Test
-    public void checkSuccessDefectPassword() {      //проверяем тело ответа по значению "success"
-        user.setPassword(null);
-        Response response = UserAPI.createUser(user);
-        assertEquals(false, response.jsonPath().getJsonObject("success"));
-
-    }
-
-    @Test
-    public void checkCodeDefectName() {              //проверяем код ответа
+    public void checkDefectName() {         // ~~- создать пользователя и не заполнить поле имя.~~
         user.setName(null);
         Response response = UserAPI.createUser(user);
         assertEquals(SC_FORBIDDEN, response.statusCode());
-    }
-
-    @Test
-    public void checkSuccessDefectName() {          //проверяем тело ответа по значению "success"
-        user.setName(null);
-        Response response = UserAPI.createUser(user);
-        assertEquals(false, response.jsonPath().getJsonObject("success"));
+        response.then().assertThat().body("success", equalTo(false));
     }
 }

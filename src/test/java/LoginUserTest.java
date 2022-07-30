@@ -1,20 +1,23 @@
 import ForUser.NewUser;
 import ForUser.OldUser;
+import ForUser.RefreshToken;
 import ForUser.UserAPI;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.apache.http.HttpStatus.*;
-import static org.junit.Assert.assertEquals;
+import static org.apache.http.HttpStatus.SC_OK;
+import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
+import static org.hamcrest.CoreMatchers.equalTo;
+import static org.hamcrest.core.Is.is;
 
-public class LoginUserTest {
+public class LoginUserTest {                //~~Логин пользователя:
     OldUser oldUser;
     NewUser newUser;
-    String refreshToken;
     String accessToken;
     Response responseCreate;
+    RefreshToken refreshToken;
 
     @Before
     public void doBefore() {
@@ -22,54 +25,36 @@ public class LoginUserTest {
         responseCreate = UserAPI.createUser(newUser);
         oldUser = new OldUser(newUser.getEmail(), newUser.getPassword());
         accessToken = responseCreate.jsonPath().getString("accessToken");
-        refreshToken = responseCreate.jsonPath().getJsonObject("refreshToken");
-        UserAPI.logoutUser(refreshToken);
+        refreshToken = new RefreshToken(responseCreate.jsonPath().getString("refreshToken"));
     }
 
     @After
     public void doAfter() {
-        //UserAPI.deleteUser(response.jsonPath().getString("accessToken"));
-        assertEquals(SC_ACCEPTED, UserAPI.deleteUser(accessToken).statusCode());
+        UserAPI.deleteUser(accessToken);
     }
 
     @Test
-    public void checkCodeLoginUser() {              //проверяем код ответа
+    public void checkLoginUser() {              // ~~- логин под существующим пользователем,~~
         Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(SC_OK, responseLogin.statusCode());
+        accessToken = responseLogin.jsonPath().getString("accessToken");
+        responseLogin.then().statusCode(SC_OK);
+        responseLogin.then().assertThat().body("success", equalTo(true));
     }
 
-    @Test
-    public void checkSuccessLoginUser() {              //проверяем тело ответа по значению "success"
-        Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(true, responseLogin.jsonPath().getJsonObject("success"));
-    }
 
     @Test
-    public void checkCodeLoginDefectEmail() {              //проверяем код ответа
+    public void checkLoginDefectEmail() {       // ~~- логин с неверным логином.~~~~
         oldUser.setRandomEmail();
         Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(SC_UNAUTHORIZED, responseLogin.statusCode());
+        responseLogin.then().statusCode(SC_UNAUTHORIZED);
+        responseLogin.then().assertThat().body("success", is(false));
     }
 
     @Test
-    public void checkSuccessLoginDefectEmail() {              //проверяем тело ответа по значению "success"
-        oldUser.setRandomEmail();
-        Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(false, responseLogin.jsonPath().getJsonObject("success"));
-    }
-
-    @Test
-    public void checkCodeLoginDefectPassword() {              //проверяем код ответа
+    public void checkLoginDefectPassword() {   // ~~- логин с неверным паролем.~~~~
         oldUser.setRandomPassword();
         Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(SC_UNAUTHORIZED, responseLogin.statusCode());
+        responseLogin.then().statusCode(SC_UNAUTHORIZED);
+        responseLogin.then().assertThat().body("success", is(false));
     }
-
-    @Test
-    public void checkSuccessLoginDefectPassword() {              //проверяем тело ответа по значению "success"
-        oldUser.setRandomPassword();
-        Response responseLogin = UserAPI.loginUser(oldUser);
-        assertEquals(false, responseLogin.jsonPath().getJsonObject("success"));
-    }
-
 }

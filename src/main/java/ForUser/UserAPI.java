@@ -5,6 +5,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.equalTo;
 
 public class UserAPI {
     private static final String URL = " https://stellarburgers.nomoreparties.site/";
@@ -17,20 +18,20 @@ public class UserAPI {
     }
 
     @Step("Удаление пользователя.")
-    public static Response deleteUser(String token) {
-        return given().header("Authorization", token)
-                .when().delete(URL + HANDLE + "/user");
+    public static void deleteUser(String token) {
+        given().header("Authorization", token)
+                .when().delete(URL + HANDLE + "/user").then().statusCode(202).and().body("success", equalTo(true));
     }
 
     @Step("Регистрация пользователя.")
     public static Response loginUser(OldUser user) {
-        return given().contentType(ContentType.JSON)
+        return given().header("Content-type", "application/json")
                 .and().body(user).when().post(URL + HANDLE + "/login");
     }
 
     @Step("Выход из системы.")
-    public static Response logoutUser(String refreshToken) {
-        return given().contentType(ContentType.JSON)
+    public static Response logoutUser(RefreshToken refreshToken) {
+        return given().header("Content-type", "application/json")
                 .and().body(refreshToken).when().post(URL + HANDLE + "/logout");
     }
 
