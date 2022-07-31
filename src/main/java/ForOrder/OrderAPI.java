@@ -10,7 +10,7 @@ public class OrderAPI {
     private static final String HANDLE = "api/orders";
 
     @Step("Создание заказа.")
-    public static Response createOrder(Order order) {
+    public static Response createOrder(Order order) {   //4
         return given().header("Content-type", "application/json")
                 .and().body(order).when().post(URL + HANDLE);
     }

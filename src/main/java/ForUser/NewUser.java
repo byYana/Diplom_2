@@ -20,6 +20,8 @@ public class NewUser {
         String name = RandomStringUtils.randomAlphabetic(8);
         return new NewUser(email, password, name);
     }
+    public NewUser(){
+    }
 
     public String getEmail() {
         return email;

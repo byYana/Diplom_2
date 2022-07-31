@@ -1,7 +1,9 @@
 import ForOrder.OrderAPI;
+import ForUser.Login;
 import ForUser.NewUser;
 import ForUser.OldUser;
 import ForUser.UserAPI;
+import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -9,18 +11,18 @@ import org.junit.Test;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
-import static org.hamcrest.CoreMatchers.equalTo;
+import static org.junit.Assert.assertEquals;
 
-public class UserOrdersTest {                           //Получение заказов конкретного пользователя:
-    NewUser newUser;
+public class UserOrdersTest {
     OldUser oldUser;
     String accessToken;
+    Response responseInformation;
 
     @Before
     public void doBefore() {
-        newUser = NewUser.getRandomUser();
-        Response responseUser = UserAPI.createUser(newUser);
-        accessToken = responseUser.jsonPath().getString("accessToken");
+        NewUser newUser = NewUser.getRandomUser();
+        Response responseCreate = UserAPI.createUser(newUser);
+        accessToken = responseCreate.then().extract().body().as(Login.class).getAccessToken();
         oldUser = new OldUser(newUser.getEmail(), newUser.getPassword());
     }
 
@@ -30,17 +32,19 @@ public class UserOrdersTest {                           //Получение з�
     }
 
     @Test
-    public void checkUserOrdersLogin() {                 // - авторизованный пользователь,
-        UserAPI.loginUser(oldUser);
-        Response responseInformation = OrderAPI.informationOrders(accessToken);
-        responseInformation.then().assertThat().statusCode(SC_OK);
-        responseInformation.then().assertThat().body("success", equalTo(true));
+    @DisplayName("Получение заказов авторизованного пользователя.")
+    public void checkUserOrdersLogin() {
+       // accessToken = UserAPI.loginUser(oldUser).then().extract().body().as(Login.class).getAccessToken();
+        responseInformation = OrderAPI.informationOrders(accessToken);
+        responseInformation.then().statusCode(SC_OK);
+        assertEquals("true", responseInformation.then().extract().body().as(Login.class).getSuccess());
     }
 
     @Test
-    public void checkUserOrdersLogout() {                // - неавторизованный пользователь.
-        Response responseInformation = OrderAPI.informationOrders("");
-        responseInformation.then().assertThat().statusCode(SC_UNAUTHORIZED);
-        responseInformation.then().assertThat().body("success", equalTo(false));
+    @DisplayName("Получение заказов не авторизованного пользователя.")
+    public void checkUserOrdersLogout() {
+        responseInformation = OrderAPI.informationOrders("");
+        responseInformation.then().statusCode(SC_UNAUTHORIZED);
+        assertEquals("false", responseInformation.then().extract().body().as(Login.class).getSuccess());
     }
 }
