@@ -1,9 +1,6 @@
 import ForOrder.Order;
 import ForOrder.OrderAPI;
-import ForUser.Login;
-import ForUser.NewUser;
-import ForUser.OldUser;
-import ForUser.UserAPI;
+import ForUser.*;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
 import org.junit.After;
@@ -17,35 +14,40 @@ import static org.apache.http.HttpStatus.*;
 import static org.junit.Assert.assertEquals;
 
 public class CreateOrderTest {
-    NewUser newUser;
-    OldUser oldUser;
-    String accessToken;
-    Response responseOrder;
-    Response loginCreate;
-    List<String> ingredients = Arrays.asList("61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa6e", "61c0c5a71d1f82001bdaaa6c");
+    NewUser newUser; // пользователь для регистрации
+    OldUser oldUser; // пользователь для авторизации
+    String accessToken; // токен
+    Response responseOrder; //ответ при заказе
+    Response responseCreate;  // ответ при создании пользователя
+    Response responseLogin; // ответ при авторизации
+    String success; //поле каждого ответа о корректности
+    Order order; // заказ
+    List<String> ingredients = Arrays.asList("61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa6e", "61c0c5a71d1f82001bdaaa6c"); // список ингредиентов
 
     @Before
     public void doBefore() {
         newUser = NewUser.getRandomUser();
-        loginCreate = UserAPI.createUser(newUser);
-        accessToken = loginCreate.then().extract().body().as(Login.class).getAccessToken();
+        responseCreate = UserAPI.createUser(newUser);
+        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         oldUser = new OldUser(newUser.getEmail(), newUser.getPassword());
     }
 
     @After
     public void doAfter() {
+        if (accessToken.equals(null)) {
+            accessToken = UserAPI.refreshToken(oldUser).then().extract().body().as(Login.class).getAccessToken();
+        }
         UserAPI.deleteUser(accessToken);
     }
 
     @Test
     @DisplayName("Создание заказа авторизованного пользователя с ингредиентами.")
     public void checkOrderLoginWithIngredients() {
-        accessToken = UserAPI.loginUser(oldUser).then().extract().body().as(Login.class).getAccessToken();
-        Order order = new Order(ingredients);
+        responseLogin = UserAPI.loginUser(oldUser);
+        order = new Order(ingredients);
         responseOrder = OrderAPI.createOrder(order);
-        responseOrder.then().statusCode(SC_OK);
-        assertEquals("true", responseOrder.then().extract().body().as(Login.class).getSuccess());
-
+        success = responseOrder.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
+        assertEquals("true", success);
     }
 
     @Test
@@ -54,29 +56,28 @@ public class CreateOrderTest {
         /*В документации не указано, что должно приходить в таком случае.
         Аналогичный запрос отправила в Postman, где так же вернулся 200 код и true.
         В самом приложении нельзя добавить заказ без авторизации.*/
-        Order order = new Order(ingredients);
+        order = new Order(ingredients);
         responseOrder = OrderAPI.createOrder(order);
-        responseOrder.then().statusCode(SC_OK);
-        assertEquals("true", responseOrder.then().extract().body().as(Login.class).getSuccess());
+        success = responseOrder.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
+        assertEquals("true", success);
     }
 
     @Test
     @DisplayName("Создание заказа авторизованного пользователя без ингредиентами.")
     public void checkOrderWithoutIngredients() {
-        UserAPI.loginUser(oldUser);
-        Order order = new Order(null);
+        responseLogin = UserAPI.loginUser(oldUser);
+        order = new Order(null);
         responseOrder = OrderAPI.createOrder(order);
-        responseOrder.then().statusCode(SC_BAD_REQUEST);
-        assertEquals("false", responseOrder.then().extract().body().as(Login.class).getSuccess());
+        success = responseOrder.then().statusCode(SC_BAD_REQUEST).extract().body().as(Mistake.class).getSuccess();
+        assertEquals("false", success);
     }
 
     @Test
     @DisplayName("Создание авторизованного пользователя с неизвестным id ингредиентом.")
     public void checkOrderWithDefectIngredients() {
-        UserAPI.loginUser(oldUser);
-        Order order = new Order(Arrays.asList("61c0c5a71d1f82001bda"));
+        responseLogin = UserAPI.loginUser(oldUser);
+        order = new Order(List.of("61c0c5a71d1f82001bda"));
         responseOrder = OrderAPI.createOrder(order);
         responseOrder.then().statusCode(SC_INTERNAL_SERVER_ERROR);
-        assertEquals("false", responseOrder.then().extract().body().as(Login.class).getSuccess());
     }
 }

@@ -1,6 +1,7 @@
 package ForOrder;
 
 import io.qameta.allure.Step;
+import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import static io.restassured.RestAssured.given;
@@ -11,7 +12,7 @@ public class OrderAPI {
 
     @Step("Создание заказа.")
     public static Response createOrder(Order order) {   //4
-        return given().header("Content-type", "application/json")
+        return given().contentType(ContentType.JSON)
                 .and().body(order).when().post(URL + HANDLE);
     }
 

@@ -14,25 +14,25 @@ public class UserAPI {
 
     @Step("Создание пользователя.")
     public static Response createUser(NewUser user) {
-        return given().contentType(ContentType.JSON).accept("text/html")
+        return given().contentType(ContentType.JSON).accept(ContentType.JSON)
                 .body(user).when().post(URL + HANDLE + "/register");
     }
 
     @Step("Удаление пользователя.")
     public static void deleteUser(String token) {
-        given().header("Authorization", token)
+        given().contentType(ContentType.JSON).header("Authorization", token)
                 .delete(URL + HANDLE + "/user").then().statusCode(202).and().body("success", equalTo(true));
     }
 
     @Step("Регистрация пользователя.")
     public static Response loginUser(OldUser user) {
-        return given().header("Content-type", "application/json").header("accept", "application/json")
+        return given().contentType(ContentType.JSON).accept(ContentType.JSON)
                 .body(user).when().post(URL + HANDLE + "/login");
     }
 
     @Step("Выход из системы.")
     public static Response logoutUser(Login refreshToken) {
-        return given().header("Content-type", "application/json").and()
+        return given().contentType(ContentType.JSON).accept(ContentType.JSON)
                 .body(refreshToken).when().post(URL + HANDLE + "/logout");
     }
 
@@ -40,5 +40,11 @@ public class UserAPI {
     public static Response changeInformation(String token, NewUser user) {
         return given().header("Authorization", token)
                 .body(user).when().patch(URL + HANDLE + "/user");
+    }
+
+    @Step("Обновление токена.")
+    public static Response refreshToken(OldUser user) {
+        return given().contentType(ContentType.JSON)
+                .body(user).when().post(URL + HANDLE + "/token");
     }
 }

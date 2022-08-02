@@ -1,4 +1,5 @@
 import ForUser.Login;
+import ForUser.Mistake;
 import ForUser.NewUser;
 import ForUser.UserAPI;
 import io.qameta.allure.junit4.DisplayName;
@@ -12,9 +13,10 @@ import static org.junit.Assert.assertEquals;
 
 
 public class CreateUserTest {
-    NewUser user;
-    Response loginResponse;
-    String accessToken;
+    NewUser user; // пользователь для регистрации
+    String accessToken;  // токен
+    String success;  //поле каждого ответа о корректности
+    Response responseCreate;  // ответ при создании пользователя
 
     @Before
     public void doBefore() {
@@ -24,21 +26,21 @@ public class CreateUserTest {
     @Test
     @DisplayName("Создание уникального пользователя.")
     public void checkCreateUser() {
-        loginResponse = UserAPI.createUser(user);
-        loginResponse.then().statusCode(SC_OK);
-        accessToken = loginResponse.then().extract().body().as(Login.class).getAccessToken();
-        assertEquals("true", loginResponse.then().extract().body().as(Login.class).getSuccess());
+        responseCreate = UserAPI.createUser(user);
+        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        success = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
+        assertEquals("true", success);
         UserAPI.deleteUser(accessToken);
     }
 
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован.")
     public void checkDoobleCreateUser() {
-        loginResponse = UserAPI.createUser(user);
-        accessToken = loginResponse.then().extract().body().as(Login.class).getAccessToken();
-        loginResponse = UserAPI.createUser(user);
-        loginResponse.then().statusCode(SC_FORBIDDEN);
-        assertEquals("false", loginResponse.then().extract().body().as(Login.class).getSuccess());
+        responseCreate = UserAPI.createUser(user);
+        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        responseCreate = UserAPI.createUser(user);
+        success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
+        assertEquals("false", success);
         UserAPI.deleteUser(accessToken);
     }
 
@@ -46,26 +48,26 @@ public class CreateUserTest {
     @DisplayName("Создание пользователя без почты.")
     public void checkDefectEmail() {
         user.setEmail(null);
-        loginResponse = UserAPI.createUser(user);
-        loginResponse.then().statusCode(SC_FORBIDDEN);
-        assertEquals("false", loginResponse.then().extract().body().as(Login.class).getSuccess());
+        responseCreate = UserAPI.createUser(user);
+        success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
+        assertEquals("false", success);
     }
 
     @Test
     @DisplayName("Создание пользователя без пароля.")
     public void checkDefectPassword() {
         user.setPassword(null);
-        loginResponse = UserAPI.createUser(user);
-        loginResponse.then().statusCode(SC_FORBIDDEN);
-        assertEquals("false", loginResponse.then().extract().body().as(Login.class).getSuccess());
+        responseCreate = UserAPI.createUser(user);
+        success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
+        assertEquals("false", success);
     }
 
     @Test
     @DisplayName("Создание пользователя без имени.")
     public void checkDefectName() {
         user.setName(null);
-        loginResponse = UserAPI.createUser(user);
-        loginResponse.then().statusCode(SC_FORBIDDEN);
-        assertEquals("false", loginResponse.then().extract().body().as(Login.class).getSuccess());
+        responseCreate = UserAPI.createUser(user);
+        success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
+        assertEquals("false", success);
     }
 }
