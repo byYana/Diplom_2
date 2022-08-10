@@ -11,14 +11,14 @@ public class OrderAPI {
     private static final String HANDLE = "api/orders";
 
     @Step("Создание заказа.")
-    public static Response createOrder(Order order) {   //4
-        return given().contentType(ContentType.JSON)
+    public static Response createOrder(Order order, String token) {   //4
+        return given().contentType(ContentType.JSON).header("Authorization", token)
                 .and().body(order).when().post(URL + HANDLE);
     }
 
     @Step("Получаем заказы.")
     public static Response informationOrders(String token) {
         return given().header("Authorization", token)
-                .get(URL + HANDLE);
+                .when().get(URL + HANDLE);
     }
 }

@@ -1,3 +1,4 @@
+import ForOrder.Order;
 import ForOrder.OrderAPI;
 import ForUser.*;
 import io.qameta.allure.junit4.DisplayName;
@@ -5,6 +6,9 @@ import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.util.Arrays;
+import java.util.List;
 
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.apache.http.HttpStatus.SC_UNAUTHORIZED;
@@ -17,6 +21,7 @@ public class UserOrdersTest {
     Response responseInfo; // ответ при получении информации
     String success; //поле каждого ответа о корректности
     Response responseCreate;  // ответ при создании пользователя
+    List<String> ingredients = Arrays.asList("61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa75", "61c0c5a71d1f82001bdaaa6e", "61c0c5a71d1f82001bdaaa6c"); // список ингредиентов
 
     @Before
     public void doBefore() {
@@ -28,8 +33,8 @@ public class UserOrdersTest {
 
     @After
     public void doAfter() {
-        if (accessToken.equals(null)) {
-            accessToken = UserAPI.refreshToken(oldUser).then().extract().body().as(Login.class).getAccessToken();
+        if (accessToken == null) {
+            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         }
         UserAPI.deleteUser(accessToken);
     }
@@ -37,9 +42,14 @@ public class UserOrdersTest {
     @Test
     @DisplayName("Получение заказов авторизованного пользователя.")
     public void checkUserOrdersLogin() {
+        UserAPI.loginUser(oldUser);
+        Order order = new Order(ingredients);
+        Response responseOrder = OrderAPI.createOrder(order,accessToken);
         responseInfo = OrderAPI.informationOrders(accessToken);
+        String expected = responseOrder.jsonPath().getString("order.number");
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
+        assertEquals(expected,responseInfo.jsonPath().getString("orders[0].number"));
     }
 
     @Test

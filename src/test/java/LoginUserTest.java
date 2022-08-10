@@ -28,8 +28,8 @@ public class LoginUserTest {
 
     @After
     public void doAfter() {
-        if (accessToken.equals(null)) {
-            accessToken = UserAPI.refreshToken(oldUser).then().extract().body().as(Login.class).getAccessToken();
+        if (accessToken == null) {
+            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         }
         UserAPI.deleteUser(accessToken);
     }
