@@ -4,13 +4,13 @@ import ForUser.NewUser;
 import ForUser.UserAPI;
 import io.qameta.allure.junit4.DisplayName;
 import io.restassured.response.Response;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import static org.apache.http.HttpStatus.SC_FORBIDDEN;
 import static org.apache.http.HttpStatus.SC_OK;
 import static org.junit.Assert.assertEquals;
-
 
 public class CreateUserTest {
     NewUser user; // пользователь для регистрации
@@ -23,14 +23,21 @@ public class CreateUserTest {
         user = NewUser.getRandomUser();
     }
 
+    @After
+    public void doAfter() {
+        if (accessToken != null) {
+            UserAPI.deleteUser(accessToken);
+        }
+    }
+
     @Test
     @DisplayName("Создание уникального пользователя.")
     public void checkCreateUser() {
         responseCreate = UserAPI.createUser(user);
         accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        // Проверяем код ответа и поле ответа "success"
         success = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -39,9 +46,9 @@ public class CreateUserTest {
         responseCreate = UserAPI.createUser(user);
         accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         responseCreate = UserAPI.createUser(user);
+        // Проверяем код ответа и поле ответа "success"
         success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -49,6 +56,7 @@ public class CreateUserTest {
     public void checkDefectEmail() {
         user.setEmail(null);
         responseCreate = UserAPI.createUser(user);
+        // Проверяем код ответа и поле ответа "success"
         success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }
@@ -58,6 +66,7 @@ public class CreateUserTest {
     public void checkDefectPassword() {
         user.setPassword(null);
         responseCreate = UserAPI.createUser(user);
+        // Проверяем код ответа и поле ответа "success"
         success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }
@@ -67,6 +76,7 @@ public class CreateUserTest {
     public void checkDefectName() {
         user.setName(null);
         responseCreate = UserAPI.createUser(user);
+        // Проверяем код ответа и поле ответа "success"
         success = responseCreate.then().statusCode(SC_FORBIDDEN).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }

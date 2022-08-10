@@ -25,14 +25,14 @@ public class ChangeDataUserTest {
         newUser = NewUser.getRandomUser();
         responseCreate = UserAPI.createUser(newUser);
         oldUser = new OldUser(newUser.getEmail(), newUser.getPassword());
+        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
     }
 
     @After
     public void doAfter() {
-        if (accessToken == null) {
-            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        if (accessToken != null) {
+            UserAPI.deleteUser(accessToken);
         }
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -40,8 +40,8 @@ public class ChangeDataUserTest {
     public void checkChangeName() {
         responseLogin = UserAPI.loginUser(oldUser);
         newUser.setRandomName();
-        accessToken = responseLogin.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         responseInfo = UserAPI.changeInformation(accessToken, newUser);
+        // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
     }
@@ -51,8 +51,8 @@ public class ChangeDataUserTest {
     public void checkChangeEmail() {
         responseLogin = UserAPI.loginUser(oldUser);
         newUser.setRandomEmail();
-        accessToken = responseLogin.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         responseInfo = UserAPI.changeInformation(accessToken, newUser);
+        // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
     }
@@ -62,8 +62,8 @@ public class ChangeDataUserTest {
     public void checkChangePassword() {
         responseLogin = UserAPI.loginUser(oldUser);
         newUser.setRandomPassword();
-        accessToken = responseLogin.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         responseInfo = UserAPI.changeInformation(accessToken, newUser);
+        // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
     }
@@ -71,10 +71,10 @@ public class ChangeDataUserTest {
     @Test
     @DisplayName("Не авторизованный пользователь меняет имя.")
     public void checkDefectChangeName() {
-        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         newUser.setRandomName();
         responseInfo = UserAPI.changeInformation("", newUser);
         success = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
+        // Проверяем код ответа и поле ответа "success" и "message"
         messageMistake = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getMessage();
         assertEquals("false", success);
         assertEquals(message, messageMistake);
@@ -83,10 +83,10 @@ public class ChangeDataUserTest {
     @Test
     @DisplayName("Не авторизованный пользователь меняет почту.")
     public void checkDefectChangeEmail() {
-        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         newUser.setRandomEmail();
         responseInfo = UserAPI.changeInformation("", newUser);
         success = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
+        // Проверяем код ответа и поле ответа "success" и "message"
         messageMistake = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getMessage();
         assertEquals("false", success);
         assertEquals(message, messageMistake);
@@ -95,10 +95,10 @@ public class ChangeDataUserTest {
     @Test
     @DisplayName("Не авторизованный пользователь меняет пароль.")
     public void checkDefectChangePassword() {
-        accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         newUser.setRandomPassword();
         responseInfo = UserAPI.changeInformation("", newUser);
         success = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
+        // Проверяем код ответа и поле ответа "success" и "message"
         messageMistake = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getMessage();
         assertEquals("false", success);
         assertEquals(message, messageMistake);

@@ -18,7 +18,7 @@ public class OrderAPI {
 
     @Step("Получаем заказы.")
     public static Response informationOrders(String token) {
-        return given().header("Authorization", token)
+        return given().contentType(ContentType.JSON).header("Authorization", token)
                 .when().get(URL + HANDLE);
     }
 }

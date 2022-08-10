@@ -28,10 +28,9 @@ public class LoginUserTest {
 
     @After
     public void doAfter() {
-        if (accessToken == null) {
-            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        if (accessToken != null) {
+            UserAPI.deleteUser(accessToken);
         }
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -42,13 +41,13 @@ public class LoginUserTest {
         assertEquals("true", success);
     }
 
-
     @Test
     @DisplayName("Логин с неверным почтой.")
     public void checkLoginDefectEmail() {
         defectUser = new OldUser(newUser.getEmail(), newUser.getPassword());
         defectUser.setRandomEmail();
         responseLogin = UserAPI.loginUser(defectUser);
+        // Проверяем код ответа и поле ответа "success"
         success = responseLogin.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }
@@ -59,6 +58,7 @@ public class LoginUserTest {
         defectUser = new OldUser(newUser.getEmail(), newUser.getPassword());
         defectUser.setRandomPassword();
         responseLogin = UserAPI.loginUser(defectUser);
+        // Проверяем код ответа и поле ответа "success"
         success = responseLogin.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }

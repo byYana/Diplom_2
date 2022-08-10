@@ -34,10 +34,9 @@ public class CreateOrderTest {
 
     @After
     public void doAfter() {
-        if (accessToken == null) {
-            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        if (accessToken != null) {
+            UserAPI.deleteUser(accessToken);
         }
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -45,7 +44,8 @@ public class CreateOrderTest {
     public void checkOrderLoginWithIngredients() {
         responseLogin = UserAPI.loginUser(oldUser);
         order = new Order(ingredients);
-        responseOrder = OrderAPI.createOrder(order,accessToken);
+        responseOrder = OrderAPI.createOrder(order, accessToken);
+        // Проверяем код ответа и поле ответа "success"
         success = responseOrder.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
     }
@@ -58,7 +58,8 @@ public class CreateOrderTest {
         Аналогичный запрос отправила в Postman, где так же вернулся 200 код и true.
         В самом приложении нельзя добавить заказ без авторизации.*/
         order = new Order(ingredients);
-        responseOrder = OrderAPI.createOrder(order,accessToken);
+        responseOrder = OrderAPI.createOrder(order, accessToken);
+        // Проверяем код ответа и поле ответа "success"
         success = responseOrder.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
     }
@@ -68,7 +69,8 @@ public class CreateOrderTest {
     public void checkOrderWithoutIngredients() {
         responseLogin = UserAPI.loginUser(oldUser);
         order = new Order(null);
-        responseOrder = OrderAPI.createOrder(order,accessToken);
+        responseOrder = OrderAPI.createOrder(order, accessToken);
+        // Проверяем код ответа и поле ответа "success"
         success = responseOrder.then().statusCode(SC_BAD_REQUEST).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }
@@ -78,7 +80,8 @@ public class CreateOrderTest {
     public void checkOrderWithDefectIngredients() {
         responseLogin = UserAPI.loginUser(oldUser);
         order = new Order(List.of("61c0c5a71d1f82001bda"));
-        responseOrder = OrderAPI.createOrder(order,accessToken);
+        responseOrder = OrderAPI.createOrder(order, accessToken);
+        // Проверяем код ответа
         responseOrder.then().statusCode(SC_INTERNAL_SERVER_ERROR);
     }
 }

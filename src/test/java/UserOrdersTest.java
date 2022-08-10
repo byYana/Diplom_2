@@ -2,6 +2,7 @@ import ForOrder.Order;
 import ForOrder.OrderAPI;
 import ForUser.*;
 import io.qameta.allure.junit4.DisplayName;
+import io.restassured.path.json.JsonPath;
 import io.restassured.response.Response;
 import org.junit.After;
 import org.junit.Before;
@@ -33,10 +34,9 @@ public class UserOrdersTest {
 
     @After
     public void doAfter() {
-        if (accessToken == null) {
-            accessToken = UserAPI.refreshToken(oldUser).then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
+        if (accessToken != null) {
+            UserAPI.deleteUser(accessToken);
         }
-        UserAPI.deleteUser(accessToken);
     }
 
     @Test
@@ -44,18 +44,26 @@ public class UserOrdersTest {
     public void checkUserOrdersLogin() {
         UserAPI.loginUser(oldUser);
         Order order = new Order(ingredients);
-        Response responseOrder = OrderAPI.createOrder(order,accessToken);
+        Response responseOrder = OrderAPI.createOrder(order, accessToken);
         responseInfo = OrderAPI.informationOrders(accessToken);
-        String expected = responseOrder.jsonPath().getString("order.number");
+        // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
-        assertEquals(expected,responseInfo.jsonPath().getString("orders[0].number"));
+        // Проверяем что у пользователя есть нужный заказ
+        String stringOrder = responseOrder.getBody().asString();
+        JsonPath jsonPath = new JsonPath(stringOrder);
+        int expected = jsonPath.getInt("order.number");
+        String stringInfo = responseInfo.getBody().asString();
+        JsonPath jsonPathToo = new JsonPath(stringInfo);
+        int actual = jsonPathToo.getInt("orders[0].number");
+        assertEquals(expected, actual);
     }
 
     @Test
     @DisplayName("Получение заказов не авторизованного пользователя.")
     public void checkUserOrdersLogout() {
         responseInfo = OrderAPI.informationOrders("");
+        // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_UNAUTHORIZED).extract().body().as(Mistake.class).getSuccess();
         assertEquals("false", success);
     }
