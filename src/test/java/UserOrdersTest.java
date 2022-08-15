@@ -49,7 +49,7 @@ public class UserOrdersTest {
         // Проверяем код ответа и поле ответа "success"
         success = responseInfo.then().statusCode(SC_OK).extract().body().as(Login.class).getSuccess();
         assertEquals("true", success);
-        // Проверяем что у пользователя есть нужный заказ
+        // Проверяем, что у пользователя есть нужный заказ
         String stringOrder = responseOrder.getBody().asString();
         JsonPath jsonPath = new JsonPath(stringOrder);
         int expected = jsonPath.getInt("order.number");
@@ -57,6 +57,9 @@ public class UserOrdersTest {
         JsonPath jsonPathToo = new JsonPath(stringInfo);
         int actual = jsonPathToo.getInt("orders[0].number");
         assertEquals(expected, actual);
+        // Проверяем, что вернулся 1 заказ
+        int ordersSize = jsonPathToo.getList("orders").size();
+        assertEquals(1, ordersSize);
     }
 
     @Test

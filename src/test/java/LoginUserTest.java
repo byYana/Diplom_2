@@ -42,7 +42,7 @@ public class LoginUserTest {
     }
 
     @Test
-    @DisplayName("Логин с неверным почтой.")
+    @DisplayName("Логин с неверной почтой.")
     public void checkLoginDefectEmail() {
         defectUser = new OldUser(newUser.getEmail(), newUser.getPassword());
         defectUser.setRandomEmail();

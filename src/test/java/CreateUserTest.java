@@ -42,7 +42,7 @@ public class CreateUserTest {
 
     @Test
     @DisplayName("Создание пользователя, который уже зарегистрирован.")
-    public void checkDoobleCreateUser() {
+    public void checkDoubleCreateUser() {
         responseCreate = UserAPI.createUser(user);
         accessToken = responseCreate.then().statusCode(SC_OK).extract().body().as(Login.class).getAccessToken();
         responseCreate = UserAPI.createUser(user);

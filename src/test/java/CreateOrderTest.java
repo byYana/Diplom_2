@@ -65,7 +65,7 @@ public class CreateOrderTest {
     }
 
     @Test
-    @DisplayName("Создание заказа авторизованного пользователя без ингредиентами.")
+    @DisplayName("Создание заказа авторизованного пользователя без ингредиентов.")
     public void checkOrderWithoutIngredients() {
         responseLogin = UserAPI.loginUser(oldUser);
         order = new Order(null);
@@ -76,7 +76,7 @@ public class CreateOrderTest {
     }
 
     @Test
-    @DisplayName("Создание авторизованного пользователя с неизвестным id ингредиентом.")
+    @DisplayName("Создание авторизованного пользователя с неизвестным id ингредиента.")
     public void checkOrderWithDefectIngredients() {
         responseLogin = UserAPI.loginUser(oldUser);
         order = new Order(List.of("61c0c5a71d1f82001bda"));
